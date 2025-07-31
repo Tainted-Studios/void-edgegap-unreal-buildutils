@@ -114,13 +114,20 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "Docker $registry login succeeded!"
 
+$arch = & uname -m
+$dockerBuildPlatformOption = ""
+if ($arch -match '^aarch64$|^arm') {
+    $dockerBuildPlatformOption = "--platform linux/amd64"
+}
+
 docker build . `
     -f "${buildUtilsPath}\Dockerfile" `
     -t "${registry}/${project}/${image}:${tag}" `
     --build-arg BUILDUTILS_FOLDER=$(Split-Path -Leaf $buildUtilsPath) `
     --build-arg UE_IMAGE_TAG=$ue_image_tag `
     --build-arg SERVER_CONFIG=$server_config `
-    --build-arg PROJECT_FILE_NAME=$project_file_name
+    --build-arg PROJECT_FILE_NAME=$project_file_name `
+    $dockerBuildPlatformOption
 
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Docker build failed."
