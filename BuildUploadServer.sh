@@ -8,13 +8,13 @@ ue_image_tag='dev-5.5.4';
 server_config='Development';
 project_file_name='LyraStarterGame';
 
-registry='registry2.edgegap.com';
+registry='registry.edgegap.com';
 project='<REGISTRY_PROJECT>';
 username='robot$<REGISTRY_ORGANIZATION_ID>+client-push';
 token='<REGISTRY_TOKEN>';
 
 # leave the rest of the script unchanged
-if jqxxx --help 2>&1 | grep -Eq "not recognized|could not be found"; then
+if ! command -v jq >/dev/null 2>&1; then
     echo "'jq' is not installed. Installing with apt-get...";
     sudo apt-get update;
     sudo apt-get install -y jq;
@@ -73,7 +73,6 @@ if [ "$local_version" != "$latest_version" ] \
 fi
 
 login_output=$(echo "$github_pat" | docker login ghcr.io -u "$github_username" --password-stdin 2>&1);
-login_code=$?;
 
 if echo "$login_output" | grep -q "unauthorized"; then
     echo "Docker GHCR login failed: unauthorized. Please verify your PAT.";
@@ -81,10 +80,10 @@ if echo "$login_output" | grep -q "unauthorized"; then
     exit 1;
 fi
 
-if [ $login_code -ne 0 ]; then
+if [ $? -ne 0 ]; then
     echo "Docker GHCR login failed: $login_output";
     read -p "Press Enter to exit";
-    exit $login_code;
+    exit $?;
 fi
 
 echo "Docker GHCR login succeeded!";
@@ -95,7 +94,6 @@ image=$(basename "$PWD" | tr -d '\n' | sed 's/[[:space:]]\+/-/g' | tr '[:upper:]
 tag=$(date +%y.%m.%d-%H.%M.%S-%Z);
 
 login_output=$(echo "$token" | docker login "$registry" -u "$username" --password-stdin 2>&1);
-login_code=$?;
 
 if echo "$login_output" | grep -q "unauthorized"; then
     echo "Docker $registry login failed: unauthorized. Please verify your docker credentials.";
@@ -103,23 +101,51 @@ if echo "$login_output" | grep -q "unauthorized"; then
     exit 1;
 fi
 
-if [ $login_code -ne 0 ]; then
+if [ $? -ne 0 ]; then
     echo "Docker $registry login failed: $login_output";
     read -p "Press Enter to exit";
-    exit $login_code;
+    exit $?;
 fi
 
 echo "Docker $registry login succeeded!";
 
+arch=$(uname -m)
+docker_build_platform_option=""
+if [[ "$arch" =~ ^aarch64$|^arm ]]; then
+    docker_build_platform_option="--platform linux/amd64"
+fi
+
 docker build . \
+    -f "$build_utils_path/Dockerfile" \
     -t "${registry}/${project}/${image}:${tag}" \
+    --build-arg BUILDUTILS_FOLDER=$(basename "$build_utils_path") \
     --build-arg UE_IMAGE_TAG=$ue_image_tag \
     --build-arg SERVER_CONFIG=$server_config \
-    --build-arg PROJECT_FILE_NAME=$project_file_name;
+    --build-arg PROJECT_FILE_NAME=$project_file_name \
+    $docker_build_platform_option;
+
+if [ $? -ne 0 ]; then
+    echo "Docker build failed.";
+    read -p "Press Enter to exit";
+    exit $?;
+fi
 
 docker push "${registry}/${project}/${image}:${tag}";
 
-open "https://app.edgegap.com/application-management/applications/${image}/versions/create?name=${tag}&imageRepo=${project}/${image}&dockerTag=${tag}&vCPU=1&memory=1";
+if [ $? -ne 0 ]; then
+    echo "Docker push failed.";
+    read -p "Press Enter to exit";
+    exit $?;
+fi
+
+app_version_url="https://app.edgegap.com/application-management/applications/${image}/versions/create?name=${tag}&imageRepo=${project}/${image}&dockerTag=${tag}&vCPU=1&memory=1&utm_source=ue_buildutils&utm_medium=servers_quickstart_script&utm_content=create_version_link";
+
+if [[ $arch == "Darwin" ]]; then
+    open "$app_version_url";
+elif grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null ; then
+    powershell.exe -NoProfile -Command "Start-Process '$app_version_url'"
+else
+    xdg-open "$app_version_url";
+fi
 
 read -p "Press Enter to exit";
-exit 1;
