@@ -36,12 +36,12 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/{apt,dpkg,cache,log}/
 
-ARG BUILDUTILS_FOLDER
-# Copy build and runtime files in the runtime container
-COPY --chown=ue4:ue4 ./${BUILDUTILS_FOLDER}/StartServer.sh /home/ue4/project/StartServer.sh
-RUN sed -i 's/\r$//' /home/ue4/project/StartServer.sh
-COPY --from=builder --chown=ue4:ue4 /tmp/project/Packaged/LinuxServer /home/ue4/project
-
 # Create user
 RUN useradd ue4
 USER ue4
+
+ARG BUILDUTILS_FOLDER
+# Copy build and runtime files in the runtime container
+COPY --from=builder --chown=ue4:ue4 /tmp/project/Packaged/LinuxServer /home/ue4/project
+COPY --chown=ue4:ue4 ./${BUILDUTILS_FOLDER}/StartServer.sh /home/ue4/project/StartServer.sh
+RUN sed -i 's/\r$//' /home/ue4/project/StartServer.sh
