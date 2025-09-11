@@ -1,4 +1,4 @@
-ARG UE_IMAGE_TAG=dev-5.5.4
+ARG UE_IMAGE_TAG=dev-5.6.1
 # First image is used to build your project inside a container
 FROM ghcr.io/epicgames/unreal-engine:${UE_IMAGE_TAG} AS builder
 

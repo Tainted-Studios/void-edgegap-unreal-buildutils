@@ -2,9 +2,9 @@
 $github_pat = '<GITHUB_PERSONAL_ACCESS_TOKEN>'
 $github_username = '<GITHUB_USERNAME>'
 
-$ue_image_tag='dev-5.5.4'
+$ue_image_tag='dev-5.6.1'
 $server_config='Development'
-$project_file_name='LyraStarterGame'
+$project_file_name='VOID'
 
 $registry = 'registry.edgegap.com'
 $project = '<REGISTRY_PROJECT>'
@@ -96,7 +96,7 @@ Write-Host "Docker GHCR login succeeded!"
 docker pull "ghcr.io/epicgames/unreal-engine:$ue_image_tag"
 
 $image = (Split-Path -Leaf $(Get-Location)).ToLower() -replace '\s+','-' -replace '[^a-z0-9-]',''
-$tag = Get-Date -UFormat "%y.%m.%d-%H.%M.%S%Z"
+$tag = Get-Date -UFormat "%y.%m.%d-%H.%M.%S"
 
 $loginResult = echo "$token" | docker login $registry -u "$username" --password-stdin 2>&1
 
@@ -114,11 +114,7 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "Docker $registry login succeeded!"
 
-$arch = & uname -m
-$dockerBuildPlatformOption = ""
-if ($arch -match '^aarch64$|^arm') {
-    $dockerBuildPlatformOption = "--platform linux/amd64"
-}
+$dockerBuildPlatformOption = "--platform=linux/amd64"
 
 docker build . `
     -f "${buildUtilsPath}\Dockerfile" `
