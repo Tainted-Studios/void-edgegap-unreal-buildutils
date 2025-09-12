@@ -2,7 +2,7 @@
 
 pid=$$
 EXECUTABLE_PATH="$(dirname "$0")"
-: ${TARGET_FILE_NAME:="LyraServer"} # edit to match your .target.cs file name
+: ${TARGET_FILE_NAME:="VOIDServer"} # edit to match your .target.cs file name
 
 # variable and function definitions
 separator() {
