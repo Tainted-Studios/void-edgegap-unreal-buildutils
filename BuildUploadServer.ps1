@@ -1,15 +1,15 @@
 # edit these values
-$github_pat = '<GITHUB_PERSONAL_ACCESS_TOKEN>'
-$github_username = '<GITHUB_USERNAME>'
+$github_pat = $args[1]      # GITHUB_PERSONAL_ACCESS_TOKEN
+$github_username = $args[0] # GITHUB_USERNAME
 
 $ue_image_tag='dev-5.6.1'
 $server_config='Development'
 $project_file_name='VOID'
 
 $registry = 'registry.edgegap.com'
-$project = '<REGISTRY_PROJECT>'
+$project = $args[2]         # REGISTRY_PROJECT
 $username = 'robot$<REGISTRY_ORGANIZATION_ID>+client-push'
-$token = '<REGISTRY_TOKEN>'
+$token = $args[3]           # REGISTRY_TOKEN
 
 # leave the rest of the script unchanged
 $buildUtilsPath = Get-Location
