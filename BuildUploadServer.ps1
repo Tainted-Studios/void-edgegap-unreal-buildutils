@@ -8,7 +8,7 @@ $project_file_name='VOID'
 
 $registry = 'registry.edgegap.com'
 $project = $args[2]         # REGISTRY_PROJECT
-$username = 'robot$<REGISTRY_ORGANIZATION_ID>+client-push'
+$username = 'robot$' + $args[2] + '+client-push' 
 $token = $args[3]           # REGISTRY_TOKEN
 
 # leave the rest of the script unchanged
